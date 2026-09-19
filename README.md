@@ -9,8 +9,6 @@ forecasting, and how does their performance vary across geographical areas with 
 - **Models:** regression with ARMA errors and daily/weekly Fourier terms (SARIMAX), LSTM, and a dilated causal
   convolutional network (TCN). Persistence and seasonal-naive baselines are included for reference.
 
-> Report: `<link to PDF report>` · Video: `<link to video>`
-
 ---
 
 ## Main results (test week, MAE)
