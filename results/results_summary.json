@@ -1,0 +1,861 @@
+{
+ "hardware": {
+  "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+  "cpu": "x86_64",
+  "logical_cpus": 2,
+  "ram_gb": 13.6,
+  "gpu": "Tesla T4, 15360 MiB",
+  "python": "3.13.15",
+  "tensorflow": "2.20.0",
+  "keras": "3.13.2",
+  "statsmodels": "0.15.0"
+ },
+ "best_configs": {
+  "SARIMAX": {
+   "p": 3,
+   "q": 0,
+   "K_daily": 4,
+   "K_weekly": 5
+  },
+  "LSTM": {
+   "L": 36,
+   "units": 128,
+   "layers": 1,
+   "dropout": 0.1,
+   "lr": 0.003,
+   "batch": 128,
+   "residual": true
+  },
+  "TCN": {
+   "L": 288,
+   "filters": 32,
+   "kernel": 3,
+   "levels": 6,
+   "dropout": 0.2,
+   "lr": 0.003,
+   "batch": 128,
+   "residual": true
+  }
+ },
+ "tuning_decisions": [
+  {
+   "model": "SARIMAX",
+   "round": 1,
+   "param": "order",
+   "hypothesis": "PACF is dominated by lags 1-3: find the smallest ARMA order that captures short-term dependence",
+   "tested": {
+    "(1, 0)": 159.81,
+    "(2, 0)": 151.38,
+    "(3, 0)": 148.32,
+    "(2, 1)": 160.37
+   },
+   "chosen": "(3, 0)",
+   "best_val_rmse": 148.32
+  },
+  {
+   "model": "SARIMAX",
+   "round": 2,
+   "param": "K_daily",
+   "hypothesis": "Daily seasonality is very strong (strength 0.94) and non-sinusoidal: test how many daily harmonics are needed",
+   "tested": {
+    "4": 147.89,
+    "6": 148.32,
+    "10": 150.35
+   },
+   "chosen": "4",
+   "best_val_rmse": 147.89
+  },
+  {
+   "model": "SARIMAX",
+   "round": 3,
+   "param": "K_weekly",
+   "hypothesis": "Weekly strength 0.72 and ACF(1 week) > ACF(2-6 days): test how much weekly shape is needed",
+   "tested": {
+    "1": 148.15,
+    "3": 147.89,
+    "5": 147.8
+   },
+   "chosen": "5",
+   "best_val_rmse": 147.8
+  },
+  {
+   "model": "LSTM",
+   "round": 1,
+   "param": "L",
+   "hypothesis": "PACF suggests short memory (6 h may suffice) but ACF peaks at 1 day: compare 6 h, 1 day, 2 days of context",
+   "tested": {
+    "36": 248.05,
+    "144": 267.81,
+    "288": 278.43
+   },
+   "chosen": "36",
+   "best_val_rmse": 248.05
+  },
+  {
+   "model": "LSTM",
+   "round": 2,
+   "param": "units",
+   "hypothesis": "Capacity: is the model under- or over-fitting?",
+   "tested": {
+    "32": 318.0,
+    "64": 248.05,
+    "128": 228.86
+   },
+   "chosen": "128",
+   "best_val_rmse": 228.86
+  },
+  {
+   "model": "LSTM",
+   "round": 3,
+   "param": "layers",
+   "hypothesis": "Does a second recurrent layer add useful non-linear structure?",
+   "tested": {
+    "1": 228.86,
+    "2": 241.72
+   },
+   "chosen": "kept previous",
+   "best_val_rmse": 228.86
+  },
+  {
+   "model": "LSTM",
+   "round": 4,
+   "param": "lr",
+   "hypothesis": "Optimisation: check sensitivity to the learning rate",
+   "tested": {
+    "0.0003": 269.14,
+    "0.001": 228.86,
+    "0.003": 188.46
+   },
+   "chosen": "0.003",
+   "best_val_rmse": 188.46
+  },
+  {
+   "model": "TCN",
+   "round": 1,
+   "param": "levels",
+   "hypothesis": "Receptive field 61 / 125 / 253 steps: must it cover a full daily cycle (144 steps)?",
+   "tested": {
+    "4": 362.3,
+    "5": 341.85,
+    "6": 230.49
+   },
+   "chosen": "kept previous",
+   "best_val_rmse": 230.49
+  },
+  {
+   "model": "TCN",
+   "round": 2,
+   "param": "filters",
+   "hypothesis": "Capacity (number of filters per layer)",
+   "tested": {
+    "16": 327.29,
+    "32": 230.49,
+    "64": 256.37
+   },
+   "chosen": "kept previous",
+   "best_val_rmse": 230.49
+  },
+  {
+   "model": "TCN",
+   "round": 3,
+   "param": "dropout",
+   "hypothesis": "Regularisation: is the model over-fitting the training weeks?",
+   "tested": {
+    "0.0": 246.1,
+    "0.1": 230.49,
+    "0.2": 227.32
+   },
+   "chosen": "0.2",
+   "best_val_rmse": 227.32
+  },
+  {
+   "model": "TCN",
+   "round": 4,
+   "param": "lr",
+   "hypothesis": "Optimisation: check sensitivity to the learning rate",
+   "tested": {
+    "0.0003": 233.43,
+    "0.001": 227.32,
+    "0.003": 222.73
+   },
+   "chosen": "0.003",
+   "best_val_rmse": 222.73
+  },
+  {
+   "model": "LSTM",
+   "round": 5,
+   "param": "target",
+   "hypothesis": "Persistence beat the direct NNs (ACF lag-1 = 0.98): predict the change from the last value instead of the level; 3 seeds to measure run-to-run variance",
+   "tested": {
+    "level": "178.98 +/- 8.22",
+    "residual": "149.26 +/- 3.80"
+   },
+   "chosen": "residual",
+   "best_val_rmse": 149.26
+  },
+  {
+   "model": "TCN",
+   "round": 5,
+   "param": "target",
+   "hypothesis": "Persistence beat the direct NNs (ACF lag-1 = 0.98): predict the change from the last value instead of the level; 3 seeds to measure run-to-run variance",
+   "tested": {
+    "level": "322.06 +/- 123.55",
+    "residual": "156.12 +/- 4.18"
+   },
+   "chosen": "residual",
+   "best_val_rmse": 156.12
+  }
+ ],
+ "metrics": {
+  "5161": {
+   "SARIMAX": {
+    "MAE": 77.5232,
+    "RMSE": 118.2714,
+    "MAPE_%": 7.4196,
+    "WAPE_%": 5.3644
+   },
+   "LSTM": {
+    "MAE": 80.0758,
+    "RMSE": 122.5419,
+    "MAPE_%": 7.4918,
+    "WAPE_%": 5.541
+   },
+   "TCN": {
+    "MAE": 78.5413,
+    "RMSE": 119.5321,
+    "MAPE_%": 7.7129,
+    "WAPE_%": 5.4348
+   },
+   "Persistence": {
+    "MAE": 92.8019,
+    "RMSE": 134.8777,
+    "MAPE_%": 9.1943,
+    "WAPE_%": 6.4216
+   },
+   "Seasonal naive (1 week)": {
+    "MAE": 300.7502,
+    "RMSE": 432.9547,
+    "MAPE_%": 28.9689,
+    "WAPE_%": 20.811
+   }
+  },
+  "5059": {
+   "SARIMAX": {
+    "MAE": 65.7697,
+    "RMSE": 94.9844,
+    "MAPE_%": 6.2576,
+    "WAPE_%": 5.1974
+   },
+   "LSTM": {
+    "MAE": 67.1757,
+    "RMSE": 96.1909,
+    "MAPE_%": 6.634,
+    "WAPE_%": 5.3085
+   },
+   "TCN": {
+    "MAE": 72.9342,
+    "RMSE": 104.2649,
+    "MAPE_%": 7.1215,
+    "WAPE_%": 5.7635
+   },
+   "Persistence": {
+    "MAE": 81.5169,
+    "RMSE": 114.375,
+    "MAPE_%": 7.9591,
+    "WAPE_%": 6.4418
+   },
+   "Seasonal naive (1 week)": {
+    "MAE": 259.95,
+    "RMSE": 361.1204,
+    "MAPE_%": 25.7314,
+    "WAPE_%": 20.5423
+   }
+  },
+  "5259": {
+   "SARIMAX": {
+    "MAE": 67.8626,
+    "RMSE": 97.7273,
+    "MAPE_%": 7.1327,
+    "WAPE_%": 5.3642
+   },
+   "LSTM": {
+    "MAE": 58.9638,
+    "RMSE": 86.3915,
+    "MAPE_%": 6.2677,
+    "WAPE_%": 4.6608
+   },
+   "TCN": {
+    "MAE": 60.3083,
+    "RMSE": 87.8381,
+    "MAPE_%": 6.6146,
+    "WAPE_%": 4.7671
+   },
+   "Persistence": {
+    "MAE": 75.9675,
+    "RMSE": 109.5784,
+    "MAPE_%": 8.1148,
+    "WAPE_%": 6.0049
+   },
+   "Seasonal naive (1 week)": {
+    "MAE": 210.241,
+    "RMSE": 289.4955,
+    "MAPE_%": 28.5632,
+    "WAPE_%": 16.6185
+   }
+  },
+  "4159": {
+   "SARIMAX": {
+    "MAE": 13.8433,
+    "RMSE": 18.9648,
+    "MAPE_%": 6.0081,
+    "WAPE_%": 5.7011
+   },
+   "LSTM": {
+    "MAE": 15.4519,
+    "RMSE": 21.4902,
+    "MAPE_%": 6.5628,
+    "WAPE_%": 6.3635
+   },
+   "TCN": {
+    "MAE": 15.1993,
+    "RMSE": 20.729,
+    "MAPE_%": 6.6037,
+    "WAPE_%": 6.2595
+   },
+   "Persistence": {
+    "MAE": 15.9525,
+    "RMSE": 21.5444,
+    "MAPE_%": 6.9823,
+    "WAPE_%": 6.5697
+   },
+   "Seasonal naive (1 week)": {
+    "MAE": 73.4075,
+    "RMSE": 97.3817,
+    "MAPE_%": 27.9573,
+    "WAPE_%": 30.2313
+   }
+  },
+  "4556": {
+   "SARIMAX": {
+    "MAE": 25.074,
+    "RMSE": 34.2299,
+    "MAPE_%": 5.6666,
+    "WAPE_%": 5.5236
+   },
+   "LSTM": {
+    "MAE": 27.9853,
+    "RMSE": 37.2736,
+    "MAPE_%": 6.3786,
+    "WAPE_%": 6.165
+   },
+   "TCN": {
+    "MAE": 27.5422,
+    "RMSE": 36.5537,
+    "MAPE_%": 6.2474,
+    "WAPE_%": 6.0674
+   },
+   "Persistence": {
+    "MAE": 28.8616,
+    "RMSE": 39.621,
+    "MAPE_%": 6.5998,
+    "WAPE_%": 6.358
+   },
+   "Seasonal naive (1 week)": {
+    "MAE": 96.3943,
+    "RMSE": 125.8634,
+    "MAPE_%": 21.6881,
+    "WAPE_%": 21.235
+   }
+  }
+ },
+ "timing_mean": {
+  "('train_s', 'mean')": {
+   "LSTM": 14.8803,
+   "SARIMAX": 89.0064,
+   "TCN": 47.8376
+  },
+  "('train_s', 'std')": {
+   "LSTM": 4.7547,
+   "SARIMAX": 0.8533,
+   "TCN": 9.1823
+  },
+  "('epochs', 'mean')": {
+   "LSTM": 36.0,
+   "SARIMAX": null,
+   "TCN": 36.3333
+  },
+  "('epochs', 'std')": {
+   "LSTM": 12.7671,
+   "SARIMAX": null,
+   "TCN": 11.0604
+  },
+  "('n_params', 'mean')": {
+   "LSTM": 69249.0,
+   "SARIMAX": 24.0,
+   "TCN": 37505.0
+  },
+  "('n_params', 'std')": {
+   "LSTM": 0.0,
+   "SARIMAX": 0.0,
+   "TCN": 0.0
+  },
+  "('infer_total_s', 'mean')": {
+   "LSTM": 0.0835,
+   "SARIMAX": 0.1271,
+   "TCN": 0.105
+  },
+  "('infer_total_s', 'std')": {
+   "LSTM": 0.0336,
+   "SARIMAX": 0.0503,
+   "TCN": 0.0237
+  },
+  "('infer_ms_per_step', 'mean')": {
+   "LSTM": 0.0828,
+   "SARIMAX": 0.1261,
+   "TCN": 0.1042
+  },
+  "('infer_ms_per_step', 'std')": {
+   "LSTM": 0.0333,
+   "SARIMAX": 0.0499,
+   "TCN": 0.0235
+  }
+ },
+ "worst_days": {
+  "5161": "2013-12-17",
+  "5059": "2013-12-22",
+  "5259": "2013-12-21"
+ },
+ "daily_wape": {
+  "5059|2013-12-16": {
+   "LSTM": 4.477,
+   "SARIMAX": 5.057,
+   "TCN": 4.852
+  },
+  "5059|2013-12-17": {
+   "LSTM": 5.555,
+   "SARIMAX": 5.814,
+   "TCN": 5.808
+  },
+  "5059|2013-12-18": {
+   "LSTM": 4.35,
+   "SARIMAX": 4.018,
+   "TCN": 5.141
+  },
+  "5059|2013-12-19": {
+   "LSTM": 4.95,
+   "SARIMAX": 4.587,
+   "TCN": 5.901
+  },
+  "5059|2013-12-20": {
+   "LSTM": 6.341,
+   "SARIMAX": 5.769,
+   "TCN": 6.6
+  },
+  "5059|2013-12-21": {
+   "LSTM": 5.399,
+   "SARIMAX": 5.294,
+   "TCN": 5.923
+  },
+  "5059|2013-12-22": {
+   "LSTM": 6.514,
+   "SARIMAX": 6.135,
+   "TCN": 6.418
+  },
+  "5161|2013-12-16": {
+   "LSTM": 5.811,
+   "SARIMAX": 5.672,
+   "TCN": 5.823
+  },
+  "5161|2013-12-17": {
+   "LSTM": 5.906,
+   "SARIMAX": 5.582,
+   "TCN": 6.623
+  },
+  "5161|2013-12-18": {
+   "LSTM": 6.015,
+   "SARIMAX": 5.917,
+   "TCN": 5.605
+  },
+  "5161|2013-12-19": {
+   "LSTM": 5.409,
+   "SARIMAX": 5.188,
+   "TCN": 5.359
+  },
+  "5161|2013-12-20": {
+   "LSTM": 5.318,
+   "SARIMAX": 4.94,
+   "TCN": 5.227
+  },
+  "5161|2013-12-21": {
+   "LSTM": 4.88,
+   "SARIMAX": 4.757,
+   "TCN": 4.614
+  },
+  "5161|2013-12-22": {
+   "LSTM": 5.579,
+   "SARIMAX": 5.579,
+   "TCN": 5.023
+  },
+  "5259|2013-12-16": {
+   "LSTM": 4.006,
+   "SARIMAX": 5.018,
+   "TCN": 4.305
+  },
+  "5259|2013-12-17": {
+   "LSTM": 3.882,
+   "SARIMAX": 4.638,
+   "TCN": 4.128
+  },
+  "5259|2013-12-18": {
+   "LSTM": 3.689,
+   "SARIMAX": 4.768,
+   "TCN": 3.513
+  },
+  "5259|2013-12-19": {
+   "LSTM": 4.982,
+   "SARIMAX": 5.342,
+   "TCN": 4.573
+  },
+  "5259|2013-12-20": {
+   "LSTM": 4.572,
+   "SARIMAX": 5.092,
+   "TCN": 4.813
+  },
+  "5259|2013-12-21": {
+   "LSTM": 9.552,
+   "SARIMAX": 8.975,
+   "TCN": 10.604
+  },
+  "5259|2013-12-22": {
+   "LSTM": 7.987,
+   "SARIMAX": 9.068,
+   "TCN": 8.345
+  }
+ },
+ "n_logged_runs": 37,
+ "tcn_receptive_field": 253,
+ "timing_per_area": [
+  {
+   "square": 5161,
+   "model": "SARIMAX",
+   "train_s": 88.3618,
+   "epochs": NaN,
+   "best_epoch": NaN,
+   "n_params": 24,
+   "infer_total_s": 0.1628,
+   "infer_ms_per_step": 0.1615
+  },
+  {
+   "square": 5161,
+   "model": "LSTM",
+   "train_s": 13.166,
+   "epochs": 33.0,
+   "best_epoch": 27.0,
+   "n_params": 69249,
+   "infer_total_s": 0.1223,
+   "infer_ms_per_step": 0.1213
+  },
+  {
+   "square": 5161,
+   "model": "TCN",
+   "train_s": 39.6941,
+   "epochs": 26.0,
+   "best_epoch": 20.0,
+   "n_params": 37505,
+   "infer_total_s": 0.0849,
+   "infer_ms_per_step": 0.0842
+  },
+  {
+   "square": 5059,
+   "model": "SARIMAX",
+   "train_s": 88.6833,
+   "epochs": NaN,
+   "best_epoch": NaN,
+   "n_params": 24,
+   "infer_total_s": 0.0696,
+   "infer_ms_per_step": 0.069
+  },
+  {
+   "square": 5059,
+   "model": "LSTM",
+   "train_s": 11.2206,
+   "epochs": 25.0,
+   "best_epoch": 19.0,
+   "n_params": 69249,
+   "infer_total_s": 0.0638,
+   "infer_ms_per_step": 0.0633
+  },
+  {
+   "square": 5059,
+   "model": "TCN",
+   "train_s": 46.0291,
+   "epochs": 35.0,
+   "best_epoch": 29.0,
+   "n_params": 37505,
+   "infer_total_s": 0.131,
+   "infer_ms_per_step": 0.13
+  },
+  {
+   "square": 5259,
+   "model": "SARIMAX",
+   "train_s": 89.974,
+   "epochs": NaN,
+   "best_epoch": NaN,
+   "n_params": 24,
+   "infer_total_s": 0.1488,
+   "infer_ms_per_step": 0.1476
+  },
+  {
+   "square": 5259,
+   "model": "LSTM",
+   "train_s": 20.2545,
+   "epochs": 50.0,
+   "best_epoch": 44.0,
+   "n_params": 69249,
+   "infer_total_s": 0.0645,
+   "infer_ms_per_step": 0.064
+  },
+  {
+   "square": 5259,
+   "model": "TCN",
+   "train_s": 57.7896,
+   "epochs": 48.0,
+   "best_epoch": 42.0,
+   "n_params": 37505,
+   "infer_total_s": 0.0991,
+   "infer_ms_per_step": 0.0983
+  }
+ ],
+ "residual_experiment": [
+  {
+   "model": "LSTM",
+   "residual": false,
+   "seed": 42,
+   "val_MAE": 122.5923,
+   "val_RMSE": 188.4596,
+   "val_MAPE_%": 8.7636,
+   "val_WAPE_%": 7.2242,
+   "epochs": 28,
+   "train_s": 15.2416
+  },
+  {
+   "model": "LSTM",
+   "residual": false,
+   "seed": 7,
+   "val_MAE": 110.7545,
+   "val_RMSE": 174.5133,
+   "val_MAPE_%": 8.1276,
+   "val_WAPE_%": 6.5266,
+   "epochs": 18,
+   "train_s": 8.5078
+  },
+  {
+   "model": "LSTM",
+   "residual": false,
+   "seed": 123,
+   "val_MAE": 114.6734,
+   "val_RMSE": 173.9569,
+   "val_MAPE_%": 8.6916,
+   "val_WAPE_%": 6.7575,
+   "epochs": 16,
+   "train_s": 6.228
+  },
+  {
+   "model": "LSTM",
+   "residual": true,
+   "seed": 42,
+   "val_MAE": 95.2178,
+   "val_RMSE": 147.1369,
+   "val_MAPE_%": 7.2932,
+   "val_WAPE_%": 5.611,
+   "epochs": 33,
+   "train_s": 13.8941
+  },
+  {
+   "model": "LSTM",
+   "residual": true,
+   "seed": 7,
+   "val_MAE": 96.1701,
+   "val_RMSE": 146.9899,
+   "val_MAPE_%": 7.3389,
+   "val_WAPE_%": 5.6672,
+   "epochs": 40,
+   "train_s": 17.8818
+  },
+  {
+   "model": "LSTM",
+   "residual": true,
+   "seed": 123,
+   "val_MAE": 99.3361,
+   "val_RMSE": 153.6449,
+   "val_MAPE_%": 7.2392,
+   "val_WAPE_%": 5.8537,
+   "epochs": 33,
+   "train_s": 13.8312
+  },
+  {
+   "model": "TCN",
+   "residual": false,
+   "seed": 42,
+   "val_MAE": 133.0365,
+   "val_RMSE": 209.2337,
+   "val_MAPE_%": 9.7274,
+   "val_WAPE_%": 7.8396,
+   "epochs": 21,
+   "train_s": 59.441
+  },
+  {
+   "model": "TCN",
+   "residual": false,
+   "seed": 7,
+   "val_MAE": 310.3187,
+   "val_RMSE": 454.0921,
+   "val_MAPE_%": 16.5725,
+   "val_WAPE_%": 18.2866,
+   "epochs": 41,
+   "train_s": 49.8661
+  },
+  {
+   "model": "TCN",
+   "residual": false,
+   "seed": 123,
+   "val_MAE": 200.2943,
+   "val_RMSE": 302.8684,
+   "val_MAPE_%": 11.2231,
+   "val_WAPE_%": 11.803,
+   "epochs": 59,
+   "train_s": 65.4911
+  },
+  {
+   "model": "TCN",
+   "residual": true,
+   "seed": 42,
+   "val_MAE": 98.8157,
+   "val_RMSE": 155.7075,
+   "val_MAPE_%": 7.3235,
+   "val_WAPE_%": 5.8231,
+   "epochs": 25,
+   "train_s": 38.8962
+  },
+  {
+   "model": "TCN",
+   "residual": true,
+   "seed": 7,
+   "val_MAE": 104.5817,
+   "val_RMSE": 160.4986,
+   "val_MAPE_%": 7.5747,
+   "val_WAPE_%": 6.1628,
+   "epochs": 29,
+   "train_s": 45.1363
+  },
+  {
+   "model": "TCN",
+   "residual": true,
+   "seed": 123,
+   "val_MAE": 97.7105,
+   "val_RMSE": 152.1665,
+   "val_MAPE_%": 7.3363,
+   "val_WAPE_%": 5.7579,
+   "epochs": 35,
+   "train_s": 46.6696
+  }
+ ],
+ "direct_target_test_metrics": {
+  "5161": {
+   "SARIMAX": {
+    "MAE": 77.5231884903378,
+    "RMSE": 118.27143481582083,
+    "MAPE_%": 7.41958491825796,
+    "WAPE_%": 5.364372698354367
+   },
+   "LSTM": {
+    "MAE": 109.97116437477027,
+    "RMSE": 170.49790833543034,
+    "MAPE_%": 10.087252843613257,
+    "WAPE_%": 7.6096755469724275
+   },
+   "TCN": {
+    "MAE": 117.2823433808653,
+    "RMSE": 182.99868371788529,
+    "MAPE_%": 10.956802282901332,
+    "WAPE_%": 8.115587259542998
+   },
+   "Persistence": {
+    "MAE": 92.80191565277778,
+    "RMSE": 134.87773699064223,
+    "MAPE_%": 9.194349007547846,
+    "WAPE_%": 6.421614904871886
+   },
+   "Seasonal naive (1 week)": {
+    "MAE": 300.7502262886905,
+    "RMSE": 432.9547313414332,
+    "MAPE_%": 28.968924922056594,
+    "WAPE_%": 20.81101583080563
+   }
+  },
+  "5059": {
+   "SARIMAX": {
+    "MAE": 65.76966284643298,
+    "RMSE": 94.9843711334782,
+    "MAPE_%": 6.257611759669719,
+    "WAPE_%": 5.197371861347882
+   },
+   "LSTM": {
+    "MAE": 99.04063452057606,
+    "RMSE": 138.94799564537942,
+    "MAPE_%": 9.346303533743825,
+    "WAPE_%": 7.82657208064431
+   },
+   "TCN": {
+    "MAE": 91.44717360677451,
+    "RMSE": 126.74086719543666,
+    "MAPE_%": 8.83803003203684,
+    "WAPE_%": 7.226507577108883
+   },
+   "Persistence": {
+    "MAE": 81.51690160714287,
+    "RMSE": 114.37504349556235,
+    "MAPE_%": 7.95907396656941,
+    "WAPE_%": 6.441779268756069
+   },
+   "Seasonal naive (1 week)": {
+    "MAE": 259.95001657738095,
+    "RMSE": 361.1203737037355,
+    "MAPE_%": 25.731423400485802,
+    "WAPE_%": 20.542250682823283
+   }
+  },
+  "5259": {
+   "SARIMAX": {
+    "MAE": 67.86264763108095,
+    "RMSE": 97.727310371468,
+    "MAPE_%": 7.132656028928423,
+    "WAPE_%": 5.364218768406498
+   },
+   "LSTM": {
+    "MAE": 71.87512684133287,
+    "RMSE": 104.26781777259663,
+    "MAPE_%": 7.517282719780001,
+    "WAPE_%": 5.681386120975519
+   },
+   "TCN": {
+    "MAE": 71.51627491862466,
+    "RMSE": 100.63535922064976,
+    "MAPE_%": 8.292710112464945,
+    "WAPE_%": 5.653020587267863
+   },
+   "Persistence": {
+    "MAE": 75.96750100198412,
+    "RMSE": 109.57840377649488,
+    "MAPE_%": 8.114780544837316,
+    "WAPE_%": 6.004868788484251
+   },
+   "Seasonal naive (1 week)": {
+    "MAE": 210.2409951686508,
+    "RMSE": 289.49546347954833,
+    "MAPE_%": 28.563162959354866,
+    "WAPE_%": 16.618548369981607
+   }
+  }
+ }
+}

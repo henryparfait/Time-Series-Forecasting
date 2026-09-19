@@ -1,0 +1,27 @@
+{
+ "SARIMAX": {
+  "p": 3,
+  "q": 0,
+  "K_daily": 4,
+  "K_weekly": 5
+ },
+ "LSTM": {
+  "L": 36,
+  "units": 128,
+  "layers": 1,
+  "dropout": 0.1,
+  "lr": 0.003,
+  "batch": 128,
+  "residual": true
+ },
+ "TCN": {
+  "L": 288,
+  "filters": 32,
+  "kernel": 3,
+  "levels": 6,
+  "dropout": 0.2,
+  "lr": 0.003,
+  "batch": 128,
+  "residual": true
+ }
+}

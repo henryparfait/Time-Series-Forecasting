@@ -1,0 +1,36 @@
+{
+  "file": "sms-call-internet-mi-2013-11-01.txt",
+  "naive": {
+    "rows": 4842625,
+    "dtypes": {
+      "square_id": "int64",
+      "time_ms": "int64",
+      "country": "int64",
+      "sms_in": "float64",
+      "sms_out": "float64",
+      "call_in": "float64",
+      "call_out": "float64",
+      "internet": "float64"
+    },
+    "df_mb": 309.928132,
+    "rss_increase_mb": 342.331392,
+    "load_s": 7.079144645000042
+  },
+  "optimised_read": {
+    "df_mb": 67.796882,
+    "rss_increase_mb": 83.85740800000002,
+    "load_s": 9.157864463999886
+  },
+  "aggregated_day_block_mb": 5.76,
+  "full_dataset": {
+    "naive_estimate_gb (62 x naive day)": 19.215544184,
+    "final_matrix_mb (10,000 x 8,928 float32)": 357.12
+  },
+  "hardware": {
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "logical_cpus": 2,
+    "ram_gb": 13.6,
+    "disk_free_gb": 93.8
+  }
+}
